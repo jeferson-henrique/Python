@@ -1,0 +1,14 @@
+import random
+
+class User:
+    def __init__(self):
+        self.nome = input("Digite o nome do usuario: ")
+        self.idade = input("Digite a data de nascimento do usuario: ")
+        random.seed(self.nome + self.idade)
+        self.matricula = random.randint(000000, 999999)
+
+usuario = User()
+
+print(usuario.nome)
+print(usuario.idade)
+print(usuario.matricula)

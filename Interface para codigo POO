@@ -1,0 +1,132 @@
+import sys
+import random
+from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QTextEdit, QStackedWidget, QFrame
+
+class User:
+    def __init__(self, nome, idade):
+        self.nome = nome
+        self.idade = idade
+        random.seed(nome + idade)
+        self.matricula = random.randint(100000, 999999)
+
+    def __str__(self):
+        return f"Nome: {self.nome}\nNascimento: {self.idade}\nMatrícula: {self.matricula}"
+
+class UserManagerApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Gerenciador de Usuários")
+        self.setGeometry(100, 100, 800, 600)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2e2e2e;
+                color: white;
+                font-family: Arial;
+                font-size: 14px;
+            }
+            QPushButton {
+                background-color: #007acc;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #005f99;
+            }
+            QLineEdit {
+                padding: 5px;
+                border-radius: 3px;
+                background-color: #444;
+                color: white;
+                border: 1px solid #666;
+            }
+            QTextEdit {
+                background-color: #444;
+                color: white;
+                border: 1px solid #666;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QStackedWidget {
+                border: none;
+            }
+        """)
+
+        self.usuarios = []
+
+        self.central_widget = QWidget(self)
+        self.setCentralWidget(self.central_widget)
+
+        self.sidebar = QWidget(self)
+        self.sidebar.setStyleSheet("background-color: #333;")
+        self.sidebar.setFixedWidth(200)
+
+        self.main_area = QStackedWidget(self)
+        self.main_area.setStyleSheet("background-color: #2e2e2e;")
+
+        self.init_sidebar()
+        self.init_main_area()
+
+        self.animation = QPropertyAnimation(self.sidebar, b"geometry")
+        self.animation.setDuration(300)
+        self.animation.setStartValue(QRect(0, 0, 0, self.height()))
+        self.animation.setEndValue(QRect(0, 0, 200, self.height()))
+
+        self.sidebar_button.clicked.connect(self.toggle_sidebar)
+
+    def init_sidebar(self):
+        layout = QVBoxLayout()
+
+        self.sidebar_button = QPushButton("☰", self)
+        self.sidebar_button.setStyleSheet("background-color: #333; color: white; border: none; font-size: 20px;")
+        self.sidebar_button.setFixedSize(50, 50)
+
+        self.add_user_button = QPushButton("Adicionar Usuário", self)
+        self.add_user_button.clicked.connect(self.show_add_user)
+
+        self.view_user_button = QPushButton("Exibir Usuário", self)
+        self.view_user_button.clicked.connect(self.show_view_user)
+
+        self.close_button = QPushButton("Fechar Programa", self)
+        self.close_button.clicked.connect(self.close)
+
+        layout.addWidget(self.sidebar_button)
+        layout.addWidget(self.add_user_button)
+        layout.addWidget(self.view_user_button)
+        layout.addWidget(self.close_button)
+
+        self.sidebar.setLayout(layout)
+
+    def init_main_area(self):
+        self.add_user_widget = QWidget()
+        self.view_user_widget = QWidget()
+
+        self.main_area.addWidget(self.add_user_widget)
+        self.main_area.addWidget(self.view_user_widget)
+
+        self.main_layout = QVBoxLayout(self.central_widget)
+        self.main_layout.addWidget(self.sidebar)
+        self.main_layout.addWidget(self.main_area)
+
+    def toggle_sidebar(self):
+        if self.sidebar.width() == 0:
+            self.animation.setStartValue(QRect(0, 0, 0, self.height()))
+            self.animation.setEndValue(QRect(0, 0, 200, self.height()))
+        else:
+            self.animation.setStartValue(QRect(0, 0, 200, self.height()))
+            self.animation.setEndValue(QRect(0, 0, 0, self.height()))
+
+        self.animation.start()
+
+    def show_add_user(self):
+        self.main_area.setCurrentWidget(self.add_user_widget)
+
+    def show_view_user(self):
+        self.main_area.setCurrentWidget(self.view_user_widget)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = UserManagerApp()
+    window.show()
+    sys.exit(app.exec_())

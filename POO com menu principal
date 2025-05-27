@@ -1,0 +1,72 @@
+import random
+import os
+
+class User:
+    def __init__(self):
+        self.nome = input("Digite o nome do usuário: ")
+        self.idade = input("Digite a data de nascimento do usuário: ")
+        random.seed(self.nome + self.idade)
+        self.matricula = random.randint(000000, 999999)
+
+    def __str__(self):
+        return f"Nome: {self.nome}, Nascimento: {self.idade}, Matrícula: {self.matricula}"
+
+usuarios = []
+
+def limpar_tela():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def adicionar_usuario():
+    limpar_tela()
+    usuario = User()
+    usuarios.append(usuario)
+    print("Usuário adicionado com sucesso!")
+
+def exibir_usuario():
+    limpar_tela()
+    if not usuarios:
+        print("Nenhum usuário cadastrado ainda.")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    criterio = input("Deseja buscar por (1) Matrícula ou (2) Nome? ")
+    if criterio == "1":
+        matricula_input = input("Digite o número da matrícula: ")
+        for u in usuarios:
+            if str(u.matricula) == matricula_input:
+                print("\nUsuário encontrado:")
+                print(u)
+                input("\nPressione Enter para voltar ao menu...")
+                return
+        print("Usuário não encontrado.")
+    elif criterio == "2":
+        nome_input = input("Digite o nome do usuário: ")
+        for u in usuarios:
+            if u.nome.lower() == nome_input.lower():
+                print("\nUsuário encontrado:")
+                print(u)
+                input("\nPressione Enter para voltar ao menu...")
+                return
+        print("Usuário não encontrado.")
+    else:
+        print("Opção inválida.")
+    input("\nPressione Enter para voltar ao menu...")
+
+while True:
+    limpar_tela()
+    print("=== Menu Principal ===")
+    print("1. Adicionar usuário")
+    print("2. Exibir usuário")
+    print("3. Fechar programa")
+    opcao = input("Escolha uma opção: ")
+
+    if opcao == "1":
+        adicionar_usuario()
+    elif opcao == "2":
+        exibir_usuario()
+    elif opcao == "3":
+        print("Encerrando o programa.")
+        break
+    else:
+        print("Opção inválida. Tente novamente.")
+        input("\nPressione Enter para continuar...")

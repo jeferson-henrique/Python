@@ -1,17 +1,43 @@
 import random
 import os
+import re
+import time
+
+usuarios = []
 
 class User:
     def __init__(self):
-        self.nome = input("Digite o nome do usuário: ")
-        self.idade = input("Digite a data de nascimento do usuário: ")
-        random.seed(self.nome + self.idade)
-        self.matricula = random.randint(000000, 999999)
+        while True:
+            self.nome = input("Digite o nome do usuário: ").strip()
+            if self.nome:
+                break
+            print("O nome não pode ser vazio. Tente novamente.")
+        
+        while True:
+            self.idade = input("Digite a data de nascimento do usuário (DD/MM/AAAA): ").strip()
+            if re.match(r'^\d{2}/\d{2}/\d{4}$', self.idade):
+                break
+            print("Formato inválido. Por favor, use o formato DD/MM/AAAA.")
+        
+        self.matricula = self.gerar_matricula_unica()
+
+    def gerar_matricula_unica(self):
+        tentativas = 0
+        while True:
+            if tentativas == 0:
+                seed = self.nome + self.idade
+            else:
+                numero_extra = random.randint(0, 999)
+                seed = self.nome + self.idade + f"{numero_extra:03d}"
+            random.seed(seed)
+            matricula = random.randint(0, 999999)
+            if all(u.matricula != matricula for u in usuarios):
+                return matricula
+            else:
+                tentativas += 1
 
     def __str__(self):
-        return f"Nome: {self.nome}, Nascimento: {self.idade}, Matrícula: {self.matricula}"
-
-usuarios = []
+        return f"Nome: {self.nome}, Nascimento: {self.idade}, Matrícula: {self.matricula:06d}"
 
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -20,7 +46,9 @@ def adicionar_usuario():
     limpar_tela()
     usuario = User()
     usuarios.append(usuario)
-    print("Usuário adicionado com sucesso!")
+    print("\nUsuário adicionado com sucesso!")
+    print(f"Número de matrícula gerado: {usuario.matricula:06d}")
+    input("\nPressione Enter para voltar ao menu...")
 
 def exibir_usuario():
     limpar_tela()
@@ -30,34 +58,202 @@ def exibir_usuario():
         return
 
     criterio = input("Deseja buscar por (1) Matrícula ou (2) Nome? ")
+    encontrados = []
+
     if criterio == "1":
         matricula_input = input("Digite o número da matrícula: ")
         for u in usuarios:
-            if str(u.matricula) == matricula_input:
-                print("\nUsuário encontrado:")
-                print(u)
-                input("\nPressione Enter para voltar ao menu...")
-                return
-        print("Usuário não encontrado.")
+            if f"{u.matricula:06d}" == matricula_input.zfill(6):
+                encontrados.append(u)
+                break
     elif criterio == "2":
-        nome_input = input("Digite o nome do usuário: ")
+        nome_input = input("Digite o nome do usuário: ").strip().lower()
         for u in usuarios:
-            if u.nome.lower() == nome_input.lower():
-                print("\nUsuário encontrado:")
-                print(u)
-                input("\nPressione Enter para voltar ao menu...")
-                return
-        print("Usuário não encontrado.")
+            if u.nome.lower() == nome_input:
+                encontrados.append(u)
     else:
         print("Opção inválida.")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    if encontrados:
+        print("\nUsuário(s) encontrado(s):")
+        for u in encontrados:
+            print(u)
+    else:
+        print("Nenhum usuário encontrado.")
+
     input("\nPressione Enter para voltar ao menu...")
 
+def exibir_todos_usuarios():
+    limpar_tela()
+    if not usuarios:
+        print("Nenhum usuário cadastrado ainda.")
+    else:
+        print("=== Lista de Todos os Usuários ===")
+        for idx, u in enumerate(usuarios, 1):
+            print(f"{idx}. {u}")
+    input("\nPressione Enter para voltar ao menu...")
+
+def modificar_usuario():
+    limpar_tela()
+    if not usuarios:
+        print("Nenhum usuário cadastrado ainda.")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    print("Como deseja localizar o usuário para modificar?")
+    print("1. Pela matrícula")
+    print("2. Pelo nome")
+    print("3. Listar todos e escolher")
+
+    escolha = input("Escolha uma opção: ")
+    usuario = None
+
+    if escolha == "1":
+        matricula_input = input("Digite o número da matrícula: ")
+        for u in usuarios:
+            if f"{u.matricula:06d}" == matricula_input.zfill(6):
+                usuario = u
+                break
+    elif escolha == "2":
+        nome_input = input("Digite o nome do usuário: ").strip().lower()
+        candidatos = [u for u in usuarios if u.nome.lower() == nome_input]
+        if candidatos:
+            print("\nUsuários encontrados:")
+            for idx, u in enumerate(candidatos, 1):
+                print(f"{idx}. {u}")
+            idx = int(input("Escolha o número do usuário para modificar: ")) - 1
+            if 0 <= idx < len(candidatos):
+                usuario = candidatos[idx]
+        else:
+            print("Nenhum usuário encontrado.")
+            input("\nPressione Enter para voltar ao menu...")
+            return
+    elif escolha == "3":
+        print("\n=== Lista de Usuários ===")
+        for idx, u in enumerate(usuarios, 1):
+            print(f"{idx}. {u}")
+        try:
+            escolha_idx = int(input("Escolha o número do usuário: ")) - 1
+            if 0 <= escolha_idx < len(usuarios):
+                usuario = usuarios[escolha_idx]
+        except ValueError:
+            print("Entrada inválida.")
+            input("\nPressione Enter para voltar ao menu...")
+            return
+    else:
+        print("Opção inválida.")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    while True:
+        limpar_tela()
+        print(f"Usuário selecionado: {usuario}")
+        print("\nO que deseja alterar?")
+        print("1. Nome")
+        print("2. Data de nascimento")
+        print("3. Confirmar alterações e voltar ao menu")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            novo_nome = input("Digite o novo nome: ").strip()
+            if novo_nome:
+                usuario.nome = novo_nome
+                print("Nome alterado com sucesso!")
+            else:
+                print("Nome inválido. Não foi alterado.")
+            input("\nPressione Enter para continuar...")
+        elif opcao == "2":
+            while True:
+                nova_idade = input("Digite a nova data de nascimento (DD/MM/AAAA): ").strip()
+                if re.match(r'^\d{2}/\d{2}/\d{4}$', nova_idade):
+                    usuario.idade = nova_idade
+                    print("Data de nascimento alterada com sucesso!")
+                    break
+                else:
+                    print("Formato inválido. Por favor, use o formato DD/MM/AAAA.")
+            input("\nPressione Enter para continuar...")
+        elif opcao == "3":
+            print("Alterações confirmadas.")
+            time.sleep(1)
+            break
+        else:
+            print("Opção inválida.")
+            input("\nPressione Enter para tentar novamente...")
+
+def remover_usuario():
+    limpar_tela()
+    if not usuarios:
+        print("Nenhum usuário cadastrado ainda.")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    print("Como deseja localizar o usuário para remover?")
+    print("1. Pela matrícula")
+    print("2. Pelo nome")
+    print("3. Listar todos e escolher")
+
+    escolha = input("Escolha uma opção: ")
+    usuario = None
+
+    if escolha == "1":
+        matricula_input = input("Digite o número da matrícula: ")
+        for u in usuarios:
+            if f"{u.matricula:06d}" == matricula_input.zfill(6):
+                usuario = u
+                break
+    elif escolha == "2":
+        nome_input = input("Digite o nome do usuário: ").strip().lower()
+        candidatos = [u for u in usuarios if u.nome.lower() == nome_input]
+        if candidatos:
+            print("\nUsuários encontrados:")
+            for idx, u in enumerate(candidatos, 1):
+                print(f"{idx}. {u}")
+            idx = int(input("Escolha o número do usuário para remover: ")) - 1
+            if 0 <= idx < len(candidatos):
+                usuario = candidatos[idx]
+        else:
+            print("Nenhum usuário encontrado.")
+            input("\nPressione Enter para voltar ao menu...")
+            return
+    elif escolha == "3":
+        print("\n=== Lista de Usuários ===")
+        for idx, u in enumerate(usuarios, 1):
+            print(f"{idx}. {u}")
+        try:
+            escolha_idx = int(input("Escolha o número do usuário: ")) - 1
+            if 0 <= escolha_idx < len(usuarios):
+                usuario = usuarios[escolha_idx]
+        except ValueError:
+            print("Entrada inválida.")
+            input("\nPressione Enter para voltar ao menu...")
+            return
+    else:
+        print("Opção inválida.")
+        input("\nPressione Enter para voltar ao menu...")
+        return
+
+    if usuario:
+        usuarios.remove(usuario)
+        print("Usuário removido com sucesso!")
+    else:
+        print("Usuário não encontrado.")
+
+    input("\nPressione Enter para voltar ao menu...")
+
+# ======== Menu principal ==========
 while True:
     limpar_tela()
     print("=== Menu Principal ===")
     print("1. Adicionar usuário")
     print("2. Exibir usuário")
-    print("3. Fechar programa")
+    print("3. Exibir todos os usuários")
+    print("4. Modificar usuário")
+    print("5. Remover usuário")
+    print("6. Encerrar programa")
+
     opcao = input("Escolha uma opção: ")
 
     if opcao == "1":
@@ -65,8 +261,26 @@ while True:
     elif opcao == "2":
         exibir_usuario()
     elif opcao == "3":
-        print("Encerrando o programa.")
-        break
+        exibir_todos_usuarios()
+    elif opcao == "6":
+        confirmar = input("Tem certeza que deseja encerrar o programa? (s/n): ").strip().lower()
+        if confirmar == "s":
+            print("Encerrando o programa", end="", flush=True)
+            time.sleep(1)
+            print(".", end="", flush=True)
+            time.sleep(1)
+            print(".", end="", flush=True)
+            time.sleep(1)
+            print(".", end="", flush=True)
+            time.sleep(1)
+            break
+        else:
+            print("\nVoltando ao menu principal...")
+            time.sleep(1)
+    elif opcao == "4":
+        modificar_usuario()
+    elif opcao == "5":
+        remover_usuario()
     else:
         print("Opção inválida. Tente novamente.")
         input("\nPressione Enter para continuar...")

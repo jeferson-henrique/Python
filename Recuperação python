@@ -1,0 +1,12 @@
+def media(notas, exercicios):
+    return (notas[0] + notas[1]*2 + notas[2]*3 + exercicios) / 7
+
+def conceito(m):
+    return 'A' if m >= 9 else 'B' if m >= 7.5 else 'C' if m >= 6 else 'D'
+
+for aluno in range(5):
+    n = [float(input()) for _ in range(3)]
+    e = float(input())
+    m = media(n, e)
+    c = conceito(m)
+    print(f"{m:.2f} -> {c}")

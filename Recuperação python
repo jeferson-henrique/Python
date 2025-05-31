@@ -1,12 +1,23 @@
-def media(notas, exercicios):
-    return (notas[0] + notas[1]*2 + notas[2]*3 + exercicios) / 7
+def calcular_media_aproveitamento(n1, n2, n3, media_exercicios):
+    return (n1 + n2 * 2 + n3 * 3 + media_exercicios) / 7
 
-def conceito(m):
-    return 'A' if m >= 9 else 'B' if m >= 7.5 else 'C' if m >= 6 else 'D'
+def obter_conceito(media):
+    if media >= 9.0:
+        return 'A'
+    elif media >= 7.5:
+        return 'B'
+    elif media >= 6.0:
+        return 'C'
+    else:
+        return 'D'
 
-for aluno in range(5):
-    n = [float(input()) for _ in range(3)]
-    e = float(input())
-    m = media(n, e)
-    c = conceito(m)
-    print(f"{m:.2f} -> {c}")
+for i in range(5):
+    n1 = float(input(f'Digite a N1 do aluno {i+1}: '))
+    n2 = float(input(f'Digite a N2 do aluno {i+1}: '))
+    n3 = float(input(f'Digite a N3 do aluno {i+1}: '))
+    media_exercicios = float(input(f'Digite a média dos exercícios do aluno {i+1}: '))
+    
+    media = calcular_media_aproveitamento(n1, n2, n3, media_exercicios)
+    conceito = obter_conceito(media)
+    
+    print(f'Aluno {i+1}: Média = {media:.2f}, Conceito = {conceito}')

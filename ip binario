@@ -1,0 +1,59 @@
+def binario_para_ip(bin_str):
+    octetos = [bin_str[i:i+8] for i in range(0, 32, 8)]
+    octetos_dec = [str(int(octeto, 2)) for octeto in octetos]
+    return ".".join(octetos_dec)
+
+def binario_para_int(bin_str):
+    return int(bin_str, 2)
+
+def int_para_binario_32(num):
+    return bin(num)[2:].zfill(32)
+
+def int_para_ip(num):
+    return ".".join(str((num >> (8 * i)) & 0xFF) for i in reversed(range(4)))
+
+def calcular_rede_broadcast(ip_bin, mask_bin):
+    ip_int = binario_para_int(ip_bin)
+    mask_int = binario_para_int(mask_bin)
+    
+    rede_int = ip_int & mask_int
+    broadcast_int = ip_int | (~mask_int & 0xFFFFFFFF)
+    
+    rede_ip = int_para_ip(rede_int)
+    broadcast_ip = int_para_ip(broadcast_int)
+    
+    return rede_int, broadcast_int, rede_ip, broadcast_ip
+
+def validar_binario_32(bin_str):
+    return len(bin_str) == 32 and all(c in '01' for c in bin_str)
+
+# ===== Execução =====
+while True:
+    ip_bin = input("Digite o IP em binário de 32 bits (ou 'sair'): ").strip()
+    if ip_bin.lower() == 'sair':
+        break
+    mask_bin = input("Digite a máscara em binário de 32 bits: ").strip()
+    
+    if not validar_binario_32(ip_bin) or not validar_binario_32(mask_bin):
+        print("Erro: IP e máscara devem ser binários de 32 bits.")
+        input("\nPressione Enter para tentar novamente...")
+        continue
+    
+    ip = binario_para_ip(ip_bin)
+    mask = binario_para_ip(mask_bin)
+    rede_int, broadcast_int, rede_ip, broadcast_ip = calcular_rede_broadcast(ip_bin, mask_bin)
+    
+    primeiro_ip_int = rede_int + 1
+    ultimo_ip_int = broadcast_int - 1
+    
+    primeiro_ip = int_para_ip(primeiro_ip_int)
+    ultimo_ip = int_para_ip(ultimo_ip_int)
+    
+    print(f"\nIP: {ip}")
+    print(f"Máscara: {mask}")
+    print(f"Endereço da Rede: {rede_ip}")
+    print(f"Broadcast: {broadcast_ip}")
+    print(f"Primeiro IP válido: {primeiro_ip}")
+    print(f"Último IP válido: {ultimo_ip}")
+    
+    input("\nPressione Enter para continuar...")

@@ -1,0 +1,152 @@
+import os
+import sys
+import platform
+import getpass
+
+def exibir_ajuda():
+    comandos = {
+        "mkdir <dir>": "Cria um novo diretório.",
+        "pwd": "Exibe o caminho completo do diretório atual.",
+        "ls": "Lista os arquivos e diretórios no diretório atual.",
+        "touch <arq>": "Cria um novo arquivo vazio com o nome especificado.",
+        "cd <dir>": "Muda o diretório atual.",
+        "cdhome": "Volta para o diretório inicial (onde o terminal foi iniciado).",
+        "rm <arq>": "Remove um arquivo.",
+        "rmdir <dir>": "Remove um diretório vazio.",
+        "cat <arq>": "Exibe o conteúdo de um arquivo.",
+        "clear": "Limpa a tela do terminal.",
+        "echo <texto>": "Exibe uma mensagem no terminal.",
+        "whoami": "Mostra o nome do usuário atual.",
+        "write <arq> <texto>": "Adiciona texto no arquivo especificado.",
+        "help": "Exibe a lista de comandos disponíveis.",
+        "exit": "Encerra o terminal."
+    }
+    print("Lista de comandos disponíveis:")
+    for cmd, desc in comandos.items():
+        print(f"  {cmd.ljust(20)} - {desc}")
+
+def main():
+    usuario = getpass.getuser()
+    maquina = platform.node()
+    diretorio_inicial = os.getcwd()
+
+    while True:
+        try:
+            comando = input(f"{usuario}@{maquina}:~$ ").strip()
+            
+            if not comando:
+                continue
+            
+            partes = comando.split()
+            cmd = partes[0]
+            args = partes[1:]
+            
+            if cmd == "exit":
+                break
+            
+            elif cmd == "mkdir":
+                if len(args) != 1:
+                    print("Erro: O comando mkdir requer exatamente 1 argumento.")
+                else:
+                    try:
+                        os.mkdir(args[0])
+                    except Exception as e:
+                        print(f"Erro ao criar diretório: {e}")
+            
+            elif cmd == "pwd":
+                print(os.getcwd())
+            
+            elif cmd == "ls":
+                try:
+                    itens = os.listdir()
+                    for item in itens:
+                        print(item)
+                except Exception as e:
+                    print(f"Erro ao listar diretórios/arquivos: {e}")
+            
+            elif cmd == "touch":
+                if len(args) != 1:
+                    print("Erro: O comando touch requer exatamente 1 argumento.")
+                else:
+                    try:
+                        with open(args[0], 'a'):
+                            os.utime(args[0], None)
+                    except Exception as e:
+                        print(f"Erro ao criar arquivo: {e}")
+            
+            elif cmd == "cd":
+                if len(args) != 1:
+                    print("Erro: O comando cd requer exatamente 1 argumento.")
+                else:
+                    try:
+                        os.chdir(args[0])
+                    except Exception as e:
+                        print(f"Erro ao mudar de diretório: {e}")
+
+            elif cmd == "cdhome":
+                os.chdir(diretorio_inicial)
+                print("Retornou ao diretório inicial.")
+
+            elif cmd == "rm":
+                if len(args) != 1:
+                    print("Erro: O comando rm requer exatamente 1 argumento.")
+                else:
+                    try:
+                        os.remove(args[0])
+                    except Exception as e:
+                        print(f"Erro ao remover arquivo: {e}")
+            
+            elif cmd == "rmdir":
+                if len(args) != 1:
+                    print("Erro: O comando rmdir requer exatamente 1 argumento.")
+                else:
+                    try:
+                        os.rmdir(args[0])
+                    except Exception as e:
+                        print(f"Erro ao remover diretório: {e}")
+            
+            elif cmd == "cat":
+                if len(args) != 1:
+                    print("Erro: O comando cat requer exatamente 1 argumento.")
+                else:
+                    try:
+                        with open(args[0], 'r') as f:
+                            print(f.read())
+                    except Exception as e:
+                        print(f"Erro ao ler arquivo: {e}")
+            
+            elif cmd == "clear":
+                os.system('cls' if os.name == 'nt' else 'clear')
+            
+            elif cmd == "echo":
+                print(' '.join(args))
+            
+            elif cmd == "whoami":
+                print(usuario)
+
+            elif cmd == "write":
+                if len(args) < 2:
+                    print("Erro: O comando write requer pelo menos 2 argumentos.")
+                else:
+                    nome_arquivo = args[0]
+                    texto = ' '.join(args[1:])
+                    try:
+                        with open(nome_arquivo, 'a') as f:
+                            f.write(texto + '\n')
+                        print(f"Texto adicionado no arquivo {nome_arquivo}.")
+                    except Exception as e:
+                        print(f"Erro ao escrever no arquivo: {e}")
+            
+            elif cmd == "help":
+                exibir_ajuda()
+            
+            else:
+                print(f"Comando não reconhecido: {cmd}")
+        
+        except KeyboardInterrupt:
+            print("\nUse o comando 'exit' para sair.")
+        except EOFError:
+            print("\nUse o comando 'exit' para sair.")
+
+if __name__ == "__main__":
+    main()

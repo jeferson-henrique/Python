@@ -1,0 +1,158 @@
+import os
+import platform
+import getpass
+import tkinter as tk
+from tkinter import scrolledtext
+
+class TerminalGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Terminal Python")
+        self.usuario = getpass.getuser()
+        self.maquina = platform.node()
+        self.diretorio_inicial = os.getcwd()
+
+        self.text_area = scrolledtext.ScrolledText(root, wrap='word', font=('Consolas', 11), bg='black', fg='white')
+        self.text_area.pack(expand=True, fill='both')
+        self.text_area.insert(tk.END, self.get_prompt())
+        self.text_area.focus()
+        self.text_area.bind("<Return>", self.on_enter)
+        self.text_area.bind("<Key>", self.prevent_edit_outside_input)
+
+        self.input_start_index = self.text_area.index(tk.INSERT)
+
+    def get_prompt(self):
+        return f"{self.usuario}@{self.maquina}:{os.getcwd()}$ "
+
+    def prevent_edit_outside_input(self, event):
+        if event.keysym == 'BackSpace':
+            if self.text_area.compare(tk.INSERT, "<=", self.input_start_index):
+                return "break"
+        if event.keysym == 'Left':
+            if self.text_area.compare(tk.INSERT, "<=", self.input_start_index):
+                return "break"
+
+    def on_enter(self, event):
+        input_end_index = self.text_area.index(tk.INSERT)
+        comando = self.text_area.get(self.input_start_index, input_end_index).strip()
+        self.text_area.insert(tk.END, "\n")
+        self.processar_comando(comando)
+        self.text_area.insert(tk.END, self.get_prompt())
+        self.input_start_index = self.text_area.index(tk.INSERT)
+        return "break"
+
+    def escrever(self, texto):
+        self.text_area.insert(tk.END, texto + "\n")
+        self.text_area.see(tk.END)
+
+    def processar_comando(self, comando):
+        partes = comando.split()
+        if not partes:
+            return
+        cmd = partes[0]
+        args = partes[1:]
+
+        try:
+            if cmd == "exit":
+                self.root.destroy()
+
+            elif cmd == "mkdir":
+                if len(args) != 1:
+                    self.escrever("Erro: O comando mkdir requer exatamente 1 argumento.")
+                else:
+                    os.mkdir(args[0])
+
+            elif cmd == "pwd":
+                self.escrever(os.getcwd())
+
+            elif cmd == "ls":
+                for item in os.listdir():
+                    self.escrever(item)
+
+            elif cmd == "touch":
+                if len(args) != 1:
+                    self.escrever("Erro: O comando touch requer exatamente 1 argumento.")
+                else:
+                    with open(args[0], 'a'):
+                        os.utime(args[0], None)
+
+            elif cmd == "cd":
+                if len(args) != 1:
+                    self.escrever("Erro: O comando cd requer exatamente 1 argumento.")
+                else:
+                    os.chdir(args[0])
+
+            elif cmd == "cdhome":
+                os.chdir(self.diretorio_inicial)
+                self.escrever("Retornou ao diretório inicial.")
+
+            elif cmd == "rm":
+                if len(args) != 1:
+                    self.escrever("Erro: O comando rm requer exatamente 1 argumento.")
+                else:
+                    os.remove(args[0])
+
+            elif cmd == "rmdir":
+                if len(args) != 1:
+                    self.escrever("Erro: O comando rmdir requer exatamente 1 argumento.")
+                else:
+                    os.rmdir(args[0])
+
+            elif cmd == "cat":
+                if len(args) != 1:
+                    self.escrever("Erro: O comando cat requer exatamente 1 argumento.")
+                else:
+                    with open(args[0], 'r') as f:
+                        self.escrever(f.read())
+
+            elif cmd == "clear":
+                self.text_area.delete("1.0", tk.END)
+
+            elif cmd == "echo":
+                self.escrever(' '.join(args))
+
+            elif cmd == "whoami":
+                self.escrever(self.usuario)
+
+            elif cmd == "write":
+                if len(args) < 2:
+                    self.escrever("Erro: O comando write requer pelo menos 2 argumentos.")
+                else:
+                    with open(args[0], 'a') as f:
+                        f.write(' '.join(args[1:]) + '\n')
+                    self.escrever(f"Texto adicionado no arquivo {args[0]}.")
+
+            elif cmd == "help":
+                self.exibir_ajuda()
+
+            else:
+                self.escrever(f"Comando não reconhecido: {cmd}")
+
+        except Exception as e:
+            self.escrever(f"Erro: {e}")
+
+    def exibir_ajuda(self):
+        comandos = {
+            "mkdir <dir>": "Cria um novo diretório.",
+            "pwd": "Exibe o caminho completo do diretório atual.",
+            "ls": "Lista os arquivos e diretórios no diretório atual.",
+            "touch <arq>": "Cria um novo arquivo vazio com o nome especificado.",
+            "cd <dir>": "Muda o diretório atual.",
+            "cdhome": "Volta para o diretório inicial.",
+            "rm <arq>": "Remove um arquivo.",
+            "rmdir <dir>": "Remove um diretório vazio.",
+            "cat <arq>": "Exibe o conteúdo de um arquivo.",
+            "clear": "Limpa a tela.",
+            "echo <texto>": "Exibe uma mensagem.",
+            "whoami": "Mostra o nome do usuário.",
+            "write <arq> <texto>": "Adiciona texto ao arquivo.",
+            "help": "Exibe esta ajuda.",
+            "exit": "Fecha o terminal."
+        }
+        for cmd, desc in comandos.items():
+            self.escrever(f"{cmd.ljust(20)} - {desc}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TerminalGUI(root)
+    root.mainloop()
